@@ -1,7 +1,11 @@
 package com.company.wallet.service;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.company.wallet.config.StripeSimulatorProperties;
+import com.company.wallet.dto.Payment;
+import com.company.wallet.exception.StripeAmountTooSmallException;
+import com.company.wallet.exception.StripeServiceException;
+import com.company.wallet.handler.StripeRestTemplateResponseErrorHandler;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -14,7 +18,7 @@ import java.net.URI;
 
 /**
  * Handles the communication with Stripe.
- *
+ * <p>
  * A real implementation would call to String using their API/SDK.
  * This dummy implementation throws an error when trying to charge less than 10€.
  */
@@ -34,15 +38,20 @@ public class StripeService {
 
     /**
      * Charges money in the credit card.
-     *
+     * <p>
      * Ignore the fact that no CVC or expiration date are provided.
      *
      * @param creditCardNumber The number of the credit card
-     * @param amount The amount that will be charged.
-     *
+     * @param amount           The amount that will be charged.
      * @throws StripeServiceException
      */
     public Payment charge(@NonNull String creditCardNumber, @NonNull BigDecimal amount) throws StripeServiceException {
+        // based on the description above i add this check to avoid unnecessary calls to Stripe
+        // it's defensive, but it can easily be removed if not needed
+        if (amount.compareTo(BigDecimal.TEN) < 0) {
+            throw new StripeAmountTooSmallException();
+        }
+
         ChargeRequest body = new ChargeRequest(creditCardNumber, amount);
         URI uri = URI.create(stripeProps.getChargeUri());
         return restTemplate.postForObject(uri, body, Payment.class);

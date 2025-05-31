@@ -1,5 +1,6 @@
-package com.company.wallet.service;
+package com.company.wallet.handler;
 
+import com.company.wallet.exception.StripeAmountTooSmallException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 

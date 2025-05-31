@@ -42,7 +42,7 @@ This project requires a `STRIPE_SIMULATOR_BASE_URI` environment variable to be s
 You can copy `.env.sample` to `.env` and adjust the value if needed:
 
 cp .env.sample .env
-
+export $(cat .env | xargs) --> remember to put the command to remove this part. (they can also just replace the {} for the old one)
 source .env
 
 
