@@ -41,15 +41,14 @@ public class StripeServiceTest {
 
 
     @Test
-    void whenTheAmountIsLessThan10ExpectException() {
-        Assertions.assertThrows(StripeAmountTooSmallException.class, () -> {
-            underTest.charge("4242 4242 4242 4242", new BigDecimal(5));
-        });
+    void when_the_amount_is_less_than_10_expect_exception() {
+        Assertions.assertThrows(StripeAmountTooSmallException.class, () ->
+                underTest.charge("4242 4242 4242 4242", new BigDecimal(5)));
         mockServer.verify();
     }
 
     @Test
-    void whenChargeIsSuccessful() throws StripeServiceException {
+    void when_charge_is_successful() throws StripeServiceException {
         mockServer.expect(once(),
                         requestTo("http://localhost:9999/v1/stripe-simulator/charges"))
                 .andRespond(withSuccess("{\"id\":\"payment_123\"}", MediaType.APPLICATION_JSON));
@@ -60,7 +59,7 @@ public class StripeServiceTest {
     }
 
     @Test
-    void whenTheresARefund() throws StripeServiceException {
+    void when_theres_a_refund() throws StripeServiceException {
         String paymentId = "123";
         mockServer.expect(once(),
                         requestTo("http://localhost:9999/v1/stripe-simulator/payments/" + paymentId + "/refunds"))

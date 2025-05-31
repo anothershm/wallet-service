@@ -1,50 +1,112 @@
-# Wallets Service
-In company, we have a service to manage our wallets. Our players can top-up their wallets using a credit card and spend that money on our platform (bookings, racket rentals, ...)
+# 💰 Wallets Service (Technical Exercise)
 
-That service has the following operations:
-- You can query your balance.
-- You can top-up your wallet. In this case, we charge the amount using a third-party payments platform (stripe, paypal, redsys).
-- You can spend your balance on purchases in company. 
-- You can return these purchases, and your money is refunded.
-- You can check your history of transactions.
+This is a simplified wallet service built as part of a backend technical exercise. It allows players to top up their wallets using a credit card and query their wallet balance.
 
-This exercise consists of building a proof of concept of that wallet service.
-You have to code endpoints for these operations:
-1. Get a wallet using its identifier.
-1. Top-up money in that wallet using a credit card number. It has to charge that amount internally using a third-party platform.
+---
 
-You don't have to write the following operations, but we will discuss possible solutions during the interview:
-1. How to spend money from the wallet.
-1. How to refund that money.
+## 🧾 Problem Statement
 
-The basic structure of a wallet is its identifier and its current balance. If you think you need extra fields, add them. We will discuss it in the interview. 
+In the original company, this service is used to manage player wallets. Players can:
+- Query balance.
+- Top-up wallet. In this case, we charge the amount using a third-party payments platform (stripe, paypal, redsys).
+- Spend balance on purchases in company.
+- Return these purchases, and money is refunded.
+- Check their history of transactions.
 
-So you can focus on these problems, you have here a maven project with a Spring Boot application. It already contains
-the basic dependencies and an H2 database. There are development and test profiles.
 
-You can also find an implementation of the service that would call to the real payments platform (StripePaymentService).
-This implementation is calling to a simulator deployed in one of our environments. Take into account
-that this simulator will return 422 http error codes under certain conditions.
+### ✅ Required Features (Implemented in this POC):
+1. **Get a wallet** using its identifier.
+2. **Top up money** in a wallet using a credit card. This action charges the amount via a third-party platform (Stripe simulator).
+3. Taken into consideration this service must work in a microservices environment in high availability. You should care about concurrency too.
+4. Didn't need to write tests for everything, but displayed different types of tests.
 
-Consider that this service must work in a microservices environment in high availability. You should care about concurrency too.
+### 🔜 Not Implemented (but discussed in interviews):
+- Spending money from the wallet.
+- Refunding a payment.
+- Transaction history.
 
-You can spend as much time as you need but we think that 4 hours is enough to show 
-You don't have to document your code, but you can write down anything you want to explain or anything you have skipped.
-You don't need to write tests for everything, but we would like to see different types of tests.
+---
 
+## 🛠️ Project Notes
+
+- Reorganized package structure and renamed references to anonymize the company name.
+- Replaced hardcoded simulator URLs with an environment variable.
+
+### Environment Variable
+
+Set the Stripe simulator base URL via environment (change the value in `.env`):
+
+```bash
+cp .env.sample .env
+export $(cat .env | xargs)
+```
+To **unset** this later (cleanup):
+```bash
+unset STRIPE_SIMULATOR_BASE_URI
+```
+
+**Alternatively**, just replace the `${}` reference in the `.yml` with the original hardcoded URL if needed.
+
+---
+## 🔧 Running the Application
+
+You’ll need Java 17+ and Maven installed.
+
+To start the app with the development profile (uses H2 in-memory DB with schema + data):
+
+```bash
+SPRING_PROFILES_ACTIVE=develop mvn spring-boot:run
+```
+
+> The `application.yml` is customized for easier testing. If needed, revert to the original and disable some tests.
 
 
 ---
 
-I want to anonimize the project because if this is going public on my github, I don't want to expose the company name.
-So i changed how PaymentService a bit. The url is now is in a .env file
-This project requires a `STRIPE_SIMULATOR_BASE_URI` environment variable to be set.
-You can copy `.env.sample` to `.env` and adjust the value if needed:
+## 🧪 Testing
 
-cp .env.sample .env
-export $(cat .env | xargs) --> remember to put the command to remove this part. (they can also just replace the {} for the old one)
-source .env
+- `StripeService` is covered with unit tests (success + error cases using `MockRestServiceServer`).
+- Optimistic locking via `@Version` is implemented to prevent race conditions during concurrent wallet updates.
+- Skipped controller tests for brevity — focus was on service logic and integration with the external Stripe simulator.
+- **Credit card number is never stored** for security reasons.
 
 
-I also removed the /tests folder in the src, so the structure is a bit different. It was confusing to me have a folder name tests in production code. 
-1h to change company name and configurations for the StripeService and its test.
+---
+
+## ⚙️ Concurrency Strategy
+
+- **Optimistic locking** using JPA’s `@Version` field on the `Wallet` entity. This allows multiple parallel updates, but fails safely if conflicts occur. This approach balances consistency and availability in a microservices setup.
+- **Alternative**: Pessimistic locking or external coordination tools like **ShedLock** — considered overkill for this scope.
+- Avoided eventual consistency for wallet balance updates due to the risk of users unknowingly accruing debt.
+
+---
+
+
+## 🌐 Sample API Calls
+This application uses a in-memory H2 database with a couple wallets already inside. Check the `data.sql` file for details.
+
+### ➕ Top Up Wallet
+
+```bash
+curl -X POST http://localhost:8090/wallets/{walletId}/top-up \
+  -H "Content-Type: application/json" \
+  -d '{
+        "amount": 15,
+        "creditCard": "4242 4242 4242 4242"
+      }'
+```
+
+### 📄 Get Wallet
+
+```bash
+curl http://localhost:8090/wallets/{walletId}
+```
+
+---
+
+## Time Spent
+
+- 1h: Environment setup, renaming company references for privacy, configuring `.env`, work on StripeService.
+- 1h 30min: Packaging rearrange, implementing core wallet logic and unit tests.
+- 15min: Testing the real application.
+- 15min: Write this README.

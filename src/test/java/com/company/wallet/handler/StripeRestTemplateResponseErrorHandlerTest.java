@@ -7,7 +7,9 @@ import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,17 +18,15 @@ class StripeRestTemplateResponseErrorHandlerTest {
     private final StripeRestTemplateResponseErrorHandler underTest = new StripeRestTemplateResponseErrorHandler();
 
     @Test
-    void whenResponseIs422HandleErrorThrowsException() throws IOException {
+    void when_response_is_422_handle_error_throws_exception() throws IOException {
         ClientHttpResponse mockResponse = mock(ClientHttpResponse.class);
         when(mockResponse.getStatusCode()).thenReturn(HttpStatus.UNPROCESSABLE_ENTITY);
 
-        assertThrows(StripeAmountTooSmallException.class, () -> {
-            underTest.handleError(mockResponse);
-        });
+        assertThrows(StripeAmountTooSmallException.class, () -> underTest.handleError(mockResponse));
     }
 
     @Test
-    void hasErrorWhenResponse4xxOr5xxIsTrue() throws IOException {
+    void has_error_when_response_4xx_or_5xx_is_true() throws IOException {
         ClientHttpResponse mock4xx = mock(ClientHttpResponse.class);
         when(mock4xx.getStatusCode()).thenReturn(HttpStatus.BAD_REQUEST);
 
@@ -38,7 +38,7 @@ class StripeRestTemplateResponseErrorHandlerTest {
     }
 
     @Test
-    void hasErrorWhenResponse200IsFalse() throws IOException {
+    void has_error_when_response_200_is_false() throws IOException {
         ClientHttpResponse mock200 = mock(ClientHttpResponse.class);
         when(mock200.getStatusCode()).thenReturn(HttpStatus.OK);
 
