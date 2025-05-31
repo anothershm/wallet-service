@@ -1,0 +1,28 @@
+spring.profiles.active: develop
+server:
+  port: 8090
+---
+spring.config.activate.on-profile: develop
+spring:
+  jpa:
+    show_sql: false
+    database: H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE;IGNORECASE=TRUE
+    initialize: false
+stripe:
+  simulator:
+    base-uri: ${STRIPE_SIMULATOR_BASE_URI}
+
+---
+spring.config.activate.on-profile: test
+spring:
+  jpa:
+    show_sql: false
+    database: H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE;IGNORECASE=TRUE
+    initialize: false
+stripe:
+  simulator:
+    base-uri: http://localhost:9999
